@@ -1,4 +1,4 @@
-const CACHE_NAME = 'canvaspro-v1.1.0';
+const CACHE_NAME = 'canvaspro-v2.1.0';
 
 const ASSETS = [
   './',
@@ -84,5 +84,5 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] CanvasPRO 1.1 Service Worker loaded');
-console.log('[SW] Developer: MangSatria');
+console.log('[SW] CanvasPRO 2.1 Service Worker loaded');
+console.log('[SW] Developer: Koramil Sukasada');
