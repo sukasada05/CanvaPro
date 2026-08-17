@@ -7,7 +7,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     
-    <link rel="manifest" href="site.webmanifest" />
+    <!-- Cache Control untuk development / update cepat -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <!-- Manifest dengan cache busting -->
+    <link rel="manifest" href="site.webmanifest?v=2.1.1" />
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
@@ -167,7 +173,7 @@
 <body>
 
 <div class="container">
-    <!-- JUDUL DENGAN WARNA: Canvas MERAH, Pro BIRU, 2.1 HITAM GELAP -->
+    <!-- JUDUL -->
     <div class="header-title">
         <img src="icons/favicon-32x32.png" alt="CanvasPRO" class="logo" />
         <span class="title-text">
@@ -743,25 +749,19 @@
                 let downloadCounter = parseInt(localStorage.getItem('lapsitDownloadCounter') || '0') + 1;
                 localStorage.setItem('lapsitDownloadCounter', downloadCounter.toString());
                 
-                // === PNG DENGAN RESIZE 75% ===
-                // Buat canvas temporary dengan ukuran 75% dari aslinya
-                // Ini akan menghasilkan file PNG yang lebih kecil
                 const scaleFactor = 0.75;
                 const newWidth = Math.floor(W * scaleFactor);
                 const newHeight = Math.floor(H * scaleFactor);
                 
-                // Buat canvas temporary
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = newWidth;
                 tempCanvas.height = newHeight;
                 const tempCtx = tempCanvas.getContext('2d');
                 
-                // Gambar ulang dengan ukuran lebih kecil
                 tempCtx.imageSmoothingEnabled = true;
                 tempCtx.imageSmoothingQuality = 'high';
                 tempCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
                 
-                // Download sebagai PNG
                 const link = document.createElement('a');
                 link.download = `lapsit_${downloadCounter}.png`;
                 link.href = tempCanvas.toDataURL('image/png');
@@ -772,10 +772,8 @@
                 
                 const filename = `lapsit_${downloadCounter}.png`;
                 showToast(`✅ Download ${filename} selesai! (75% ukuran)`, 'success');
-                // ALERT SUDAH DIHAPUS
             } catch (e) {
                 showToast('❌ Gagal download: ' + e.message, 'error');
-                // ALERT ERROR SUDAH DIHAPUS
             }
         }
 
@@ -882,7 +880,7 @@
                 deferredPrompt.prompt();
                 const result = await deferredPrompt.userChoice;
                 if (result.outcome === 'accepted') {
-                    // Will be handled by appinstalled event
+                    // handled by appinstalled
                 } else {
                     showToast('❌ Install dibatalkan', 'warning');
                     if (!isAppInstalled()) {
@@ -896,33 +894,56 @@
         });
 
         // ============================================
-        //  SERVICE WORKER & UPDATE
+        //  SERVICE WORKER & UPDATE - DIPERBAIKI
         // ============================================
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then((registration) => {
-                    console.log('✅ Service Worker registered');
-                    setInterval(() => {
-                        registration.update();
-                    }, 30000);
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (isAppInstalled()) {
-                                    updateBtn.classList.remove('hidden');
-                                    installBtn.classList.add('hidden');
-                                    showToast('🔄 Update tersedia! Klik tombol Update.', 'info');
-                                } else {
-                                    showToast('🔄 Update tersedia! Halaman akan refresh...', 'info');
-                                    setTimeout(() => window.location.reload(), 2000);
-                                }
-                            }
-                        });
+            navigator.serviceWorker.register('./sw.js?v=2.1.1', {
+                scope: '/',
+                updateViaCache: 'none'  // Jangan cache SW
+            }).then((registration) => {
+                console.log('✅ Service Worker registered');
+
+                // Cek update setiap 15 detik
+                setInterval(() => {
+                    registration.update();
+                }, 15000);
+
+                // Auto update ketika ada perubahan
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Kirim pesan skip waiting
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                            
+                            // Tampilkan notifikasi
+                            showToast('🔄 Update tersedia! Aplikasi akan reload...', 'info');
+                            
+                            // Reload setelah 2 detik
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        }
                     });
-                })
-                .catch((err) => console.log('❌ Service Worker failed:', err));
+                });
+
+                // Jika SW sudah aktif, cek versi
+                if (registration.active) {
+                    registration.active.postMessage({ type: 'SKIP_WAITING' });
+                }
+            }).catch((err) => {
+                console.log('❌ Service Worker failed:', err);
+            });
         }
+
+        // Tambahan: paksa update setiap kali halaman dibuka
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg) reg.update();
+                });
+            }
+        });
 
         updateBtn.addEventListener('click', () => window.location.reload());
 

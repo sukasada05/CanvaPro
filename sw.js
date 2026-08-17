@@ -1,9 +1,11 @@
-const CACHE_NAME = 'canvaspro-v2.1.0';
+const VERSION = '2.1.1';
+const CACHE_NAME = `canvaspro-${VERSION}-${Date.now()}`;
 
 const ASSETS = [
   './',
   './index.html',
   './site.webmanifest',
+  './manifest.json',  // opsional jika ada
   './icons/favicon-16x16.png',
   './icons/favicon-32x32.png',
   './icons/apple-touch-icon.png',
@@ -15,11 +17,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Cache opened');
+        console.log('[SW] Caching assets');
         return cache.addAll(ASSETS);
       })
       .then(() => {
-        console.log('[SW] Install complete');
+        console.log('[SW] Install complete, skip waiting');
         return self.skipWaiting();
       })
   );
@@ -27,53 +29,54 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
       );
     }).then(() => {
-      console.log('[SW] Activate complete');
+      console.log('[SW] Activate complete, claim clients');
       return self.clients.claim();
     })
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  if (event.request.url.startsWith('chrome-extension://')) return;
+  const url = new URL(event.request.url);
+  
+  // Network-first untuk index.html dan manifest
+  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/site.webmanifest' || url.pathname === '/manifest.json') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, clone);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
 
+  // Static assets: cache-first
   event.respondWith(
     caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest)
-          .then((networkResponse) => {
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
-            }
-
-            const responseToCache = networkResponse.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return networkResponse;
-          })
-          .catch(() => {
-            if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('/index.html');
-            }
+      .then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, clone);
           });
+          return response;
+        });
+      })
+      .catch(() => {
+        // Fallback
       })
   );
 });
@@ -84,5 +87,5 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] CanvasPRO 2.1 Service Worker loaded');
+console.log(`[SW] CanvasPRO ${VERSION} loaded`);
 console.log('[SW] Developer: Koramil Sukasada');

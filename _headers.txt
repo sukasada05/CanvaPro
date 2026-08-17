@@ -4,20 +4,24 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
 
-# Cache
+# HTML - short cache (5 minutes) to allow updates
 /index.html
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=300, must-revalidate
 
+# Service Worker & Manifest - short cache
+/sw.js
+/manifest.json
+/site.webmanifest
+  Cache-Control: public, max-age=300, must-revalidate
+
+# CSS, JS - long cache with versioning (use ?v= in URL)
 *.css
 *.js
   Cache-Control: public, max-age=31536000, immutable
 
+# Images - long cache
 *.png
 *.jpg
 *.jpeg
 *.ico
   Cache-Control: public, max-age=31536000, immutable
-
-/manifest.json
-/sw.js
-  Cache-Control: public, max-age=3600, must-revalidate

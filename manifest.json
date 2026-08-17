@@ -2,7 +2,7 @@
   "name": "CanvasPRO 2.1",
   "short_name": "CanvasPRO",
   "description": "Aplikasi CanvasPro",
-  "start_url": "/",
+  "start_url": "/?v=2.1.1",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#CC0000",
