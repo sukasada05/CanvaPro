@@ -23,11 +23,24 @@
         h1 span { color: #1a237e; }
         .canvas-wrapper { position: relative; background: #ffffff; border-radius: 10px; overflow: hidden; width: 100%; }
         canvas { display: block; width: 100%; height: auto; background: #ffffff; }
-        .click-overlay { position: absolute; border-radius: 24px; cursor: pointer; transition: background 0.3s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .click-overlay { position: absolute; border-radius: 24px; cursor: pointer; transition: background 0.3s; z-index: 10; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; }
         .click-overlay:hover { background: rgba(0,0,0,0.05); }
         .click-overlay .tooltip { background: rgba(0,0,0,0.6); color: white; font-size: 13px; padding: 6px 16px; border-radius: 20px; font-weight: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; white-space: nowrap; font-family: 'Segoe UI', Arial, sans-serif; }
         .click-overlay:hover .tooltip { opacity: 1; }
         .click-overlay.empty .tooltip { opacity: 1; }
+        .click-overlay .paste-hint { 
+            background: rgba(0,0,0,0.4); 
+            color: white; 
+            font-size: 10px; 
+            padding: 2px 10px; 
+            border-radius: 10px; 
+            pointer-events: none; 
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .click-overlay:hover .paste-hint { opacity: 1; }
+        .click-overlay.empty .paste-hint { opacity: 1; }
         .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px 0; justify-content: center; align-items: flex-end; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0 8px 0; padding: 0 15px; }
         .btn { padding: 10px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; color: white; display: inline-flex; align-items: center; gap: 8px; }
@@ -59,6 +72,7 @@
             .btn-group { flex-direction: column; }
             .btn { width: 100%; justify-content: center; padding: 12px 20px; }
             .click-overlay .tooltip { font-size: 10px; padding: 4px 12px; }
+            .click-overlay .paste-hint { font-size: 8px; padding: 2px 8px; }
         }
     </style>
 </head>
@@ -126,6 +140,7 @@
         let imgLeft = null;
         let imgRight = null;
         let isRendering = false;
+        let pasteTarget = 'left';
 
         const multiInput = document.getElementById('multiInput');
         const downloadBtn = document.getElementById('downloadBtn');
@@ -154,6 +169,70 @@
         }
 
         // ============================================
+        //  PASTE HANDLER - DIPERBAIKI
+        // ============================================
+        function handlePaste(e) {
+            // Cek apakah ada gambar di clipboard
+            const items = e.clipboardData && e.clipboardData.items;
+            if (!items) return false;
+
+            let imageFile = null;
+            
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.startsWith('image/')) {
+                    imageFile = item.getAsFile();
+                    break;
+                }
+            }
+
+            if (imageFile) {
+                e.preventDefault();
+                loadPastedImage(imageFile);
+                return true;
+            }
+            return false;
+        }
+
+        async function loadPastedImage(file) {
+            try {
+                const img = await loadImageFromFile(file);
+                const target = pasteTarget || 'left';
+                
+                if (target === 'left') {
+                    imgLeft = img;
+                    showToast('✅ Gambar di-paste ke area KIRI!', 'success');
+                } else {
+                    imgRight = img;
+                    showToast('✅ Gambar di-paste ke area KANAN!', 'success');
+                }
+                renderCanvas();
+            } catch (err) {
+                showToast('❌ Gagal paste gambar: ' + err, 'error');
+            }
+        }
+
+        // ============================================
+        //  EVENT PASTE - DIPERBAIKI
+        // ============================================
+        // Event paste di document
+        document.addEventListener('paste', function(e) {
+            // Cek apakah target adalah input atau textarea
+            const target = e.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+                return; // Biarkan paste biasa
+            }
+            
+            handlePaste(e);
+        });
+
+        // Event paste di canvas wrapper
+        canvasWrapper.addEventListener('paste', function(e) {
+            e.stopPropagation();
+            handlePaste(e);
+        });
+
+        // ============================================
         //  CREATE CLICK OVERLAYS
         // ============================================
         function createOverlays() {
@@ -170,6 +249,7 @@
             const leftH_px = imgHeight / scaleY;
             const rightX_px = imgX2 / scaleX;
 
+            // Overlay KIRI
             overlayLeft = document.createElement('div');
             overlayLeft.className = 'click-overlay';
             overlayLeft.style.left = leftX_px + 'px';
@@ -180,14 +260,27 @@
 
             const t1 = document.createElement('span');
             t1.className = 'tooltip';
-            t1.textContent = '📷 Klik untuk pilih gambar';
+            t1.textContent = '📷 Klik atau Ctrl+V';
             overlayLeft.appendChild(t1);
+
+            const hint1 = document.createElement('span');
+            hint1.className = 'paste-hint';
+            hint1.textContent = '⌨️ Ctrl+V untuk paste';
+            overlayLeft.appendChild(hint1);
+
             overlayLeft.addEventListener('click', () => {
+                pasteTarget = 'left';
                 multiInput.dataset.target = 'left';
                 multiInput.click();
             });
+
+            overlayLeft.addEventListener('mouseenter', () => {
+                pasteTarget = 'left';
+            });
+
             canvasWrapper.appendChild(overlayLeft);
 
+            // Overlay KANAN
             overlayRight = document.createElement('div');
             overlayRight.className = 'click-overlay';
             overlayRight.style.left = rightX_px + 'px';
@@ -198,12 +291,24 @@
 
             const t2 = document.createElement('span');
             t2.className = 'tooltip';
-            t2.textContent = '📷 Klik untuk pilih gambar';
+            t2.textContent = '📷 Klik atau Ctrl+V';
             overlayRight.appendChild(t2);
+
+            const hint2 = document.createElement('span');
+            hint2.className = 'paste-hint';
+            hint2.textContent = '⌨️ Ctrl+V untuk paste';
+            overlayRight.appendChild(hint2);
+
             overlayRight.addEventListener('click', () => {
+                pasteTarget = 'right';
                 multiInput.dataset.target = 'right';
                 multiInput.click();
             });
+
+            overlayRight.addEventListener('mouseenter', () => {
+                pasteTarget = 'right';
+            });
+
             canvasWrapper.appendChild(overlayRight);
         }
 
@@ -505,97 +610,57 @@
         resetBtn.addEventListener('click', resetAll);
 
         // ============================================
-        //  PWA INSTALL LOGIC - DENGAN PENGE CEKAN GANDA
+        //  PWA INSTALL LOGIC
         // ============================================
-        
-        // Fungsi untuk mengecek apakah aplikasi sudah terinstall
         function isAppInstalled() {
-            // Cek 1: Display mode standalone
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('📱 Detected: Standalone mode');
-                return true;
-            }
-            
-            // Cek 2: Window navigator standalone (iOS)
-            if (window.navigator.standalone === true) {
-                console.log('📱 Detected: iOS standalone');
-                return true;
-            }
-            
-            // Cek 3: Menggunakan localStorage untuk menyimpan status install
-            // (fallback jika deteksi gagal)
-            if (localStorage.getItem('app_installed') === 'true') {
-                console.log('📱 Detected: From localStorage');
-                return true;
-            }
-            
+            if (window.matchMedia('(display-mode: standalone)').matches) return true;
+            if (window.navigator.standalone === true) return true;
+            if (localStorage.getItem('app_installed') === 'true') return true;
             return false;
         }
 
-        // Fungsi untuk menyembunyikan tombol install
         function hideInstallButton() {
             installBtn.classList.add('hidden');
-            console.log('🔒 Tombol Install disembunyikan (sudah terinstall)');
         }
 
-        // Fungsi untuk menampilkan tombol install
         function showInstallButton() {
             installBtn.classList.remove('hidden');
-            console.log('🔓 Tombol Install ditampilkan (belum terinstall)');
         }
 
-        // CEK STATUS INSTALL SAAT PERTAMA KALI LOAD
         (function checkInstallStatus() {
             if (isAppInstalled()) {
                 hideInstallButton();
             } else {
-                // Jika belum terinstall, tombol akan muncul saat beforeinstallprompt
-                // Tapi kita sembunyikan dulu untuk menghindari flash
                 installBtn.classList.add('hidden');
             }
         })();
 
-        // Event beforeinstallprompt - browser siap untuk install
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            
-            // Cek ulang status install
             if (!isAppInstalled()) {
                 showInstallButton();
-                console.log('📲 Tombol install muncul (belum terinstall)');
                 showToast('📲 Klik "Install Aplikasi" untuk install', 'info');
             } else {
                 hideInstallButton();
             }
         });
 
-        // Event appinstalled - setelah berhasil install
         window.addEventListener('appinstalled', () => {
-            // Simpan status ke localStorage
             localStorage.setItem('app_installed', 'true');
-            
-            // Sembunyikan tombol
             hideInstallButton();
             deferredPrompt = null;
-            
-            console.log('✅ Aplikasi berhasil diinstall!');
             showToast('✅ Aplikasi berhasil diinstall!', 'success');
         });
 
-        // Tombol Install - klik untuk memulai instalasi
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const result = await deferredPrompt.userChoice;
-                
                 if (result.outcome === 'accepted') {
-                    console.log('✅ User menerima install');
-                    // Status akan disimpan di event appinstalled
+                    // Will be handled by appinstalled event
                 } else {
-                    console.log('❌ User menolak install');
                     showToast('❌ Install dibatalkan', 'warning');
-                    // Tetap tampilkan tombol jika ditolak
                     if (!isAppInstalled()) {
                         showInstallButton();
                     }
@@ -613,45 +678,29 @@
             navigator.serviceWorker.register('./sw.js')
                 .then((registration) => {
                     console.log('✅ Service Worker registered');
-                    
-                    // CEK UPDATE SETIAP 30 DETIK
                     setInterval(() => {
                         registration.update();
-                        console.log('🔄 Checking for updates...');
                     }, 30000);
-
-                    // AUTO UPDATE JIKA ADA PERUBAHAN
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
-                        console.log('🔄 Update ditemukan! Menginstall...');
-
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('✅ Update tersedia!');
-                                // Tampilkan tombol update jika aplikasi terinstall
                                 if (isAppInstalled()) {
                                     updateBtn.classList.remove('hidden');
                                     installBtn.classList.add('hidden');
-                                    showToast('🔄 Update tersedia! Klik tombol Update untuk reload.', 'info');
+                                    showToast('🔄 Update tersedia! Klik tombol Update.', 'info');
                                 } else {
-                                    // Jika belum terinstall, auto reload
                                     showToast('🔄 Update tersedia! Halaman akan refresh...', 'info');
-                                    setTimeout(() => {
-                                        window.location.reload();
-                                    }, 2000);
+                                    setTimeout(() => window.location.reload(), 2000);
                                 }
                             }
                         });
                     });
-
                 })
                 .catch((err) => console.log('❌ Service Worker failed:', err));
         }
 
-        // Tombol Update
-        updateBtn.addEventListener('click', async () => {
-            window.location.reload();
-        });
+        updateBtn.addEventListener('click', () => window.location.reload());
 
         // ============================================
         //  RESIZE
@@ -686,7 +735,6 @@
                 updateOverlays();
             }, 100);
             
-            // Final check: Pastikan tombol install benar-benar sesuai status
             if (isAppInstalled()) {
                 hideInstallButton();
             }
@@ -694,6 +742,7 @@
             showToast('🖨️ CanvasPRO 1.1 - HYBRID MULTI siap!', 'success');
             console.log('✅ CanvasPRO 1.1 - HYBRID MULTI siap!');
             console.log('📱 Status install:', isAppInstalled() ? 'Sudah terinstall ✅' : 'Belum terinstall ❌');
+            console.log('📋 Fitur Paste: Ctrl+V di area canvas (arahkan mouse ke area target)');
         }
 
         init();
