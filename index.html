@@ -19,28 +19,64 @@
         html, body { width: 100%; min-height: 100vh; background: #0a0a0a; font-family: 'Segoe UI', Arial, sans-serif; }
         body { display: flex; justify-content: center; align-items: flex-start; padding: 10px; }
         .container { background: white; padding: 0; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-width: 1100px; width: 100%; }
-        h1 { text-align: center; color: #CC0000; font-size: clamp(18px, 3vw, 28px); margin: 10px 0 5px 0; padding: 0; }
-        h1 span { color: #1a237e; }
+        .header-title { 
+            text-align: center; 
+            padding: 12px 0 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .header-title .logo {
+            height: 30px;
+            width: 30px;
+            vertical-align: middle;
+        }
+        .header-title .title-text {
+            color: #CC0000;
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 700;
+        }
+        .header-title .title-text .version {
+            color: #999;
+            font-size: clamp(12px, 1.5vw, 18px);
+            font-weight: 400;
+        }
         .canvas-wrapper { position: relative; background: #ffffff; border-radius: 10px; overflow: hidden; width: 100%; }
         canvas { display: block; width: 100%; height: auto; background: #ffffff; }
-        .click-overlay { position: absolute; border-radius: 24px; cursor: pointer; transition: background 0.3s; z-index: 10; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; }
-        .click-overlay:hover { background: rgba(0,0,0,0.05); }
-        .click-overlay .tooltip { background: rgba(0,0,0,0.6); color: white; font-size: 13px; padding: 6px 16px; border-radius: 20px; font-weight: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; white-space: nowrap; font-family: 'Segoe UI', Arial, sans-serif; }
-        .click-overlay:hover .tooltip { opacity: 1; }
-        .click-overlay.empty .tooltip { opacity: 1; }
-        .click-overlay .paste-hint { 
-            background: rgba(0,0,0,0.4); 
-            color: white; 
-            font-size: 10px; 
-            padding: 2px 10px; 
-            border-radius: 10px; 
-            pointer-events: none; 
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-family: 'Segoe UI', Arial, sans-serif;
+        .click-overlay { 
+            position: absolute; 
+            border-radius: 24px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            z-index: 10; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
         }
-        .click-overlay:hover .paste-hint { opacity: 1; }
-        .click-overlay.empty .paste-hint { opacity: 1; }
+        .click-overlay:hover { 
+            background: rgba(0,0,0,0.05); 
+        }
+        .click-overlay .tooltip { 
+            background: rgba(0,0,0,0.7); 
+            color: white; 
+            font-size: 13px; 
+            padding: 8px 20px; 
+            border-radius: 20px; 
+            font-weight: 500; 
+            pointer-events: none; 
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
+            white-space: nowrap; 
+            font-family: 'Segoe UI', Arial, sans-serif;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .click-overlay:hover .tooltip { 
+            opacity: 1; 
+        }
+        .click-overlay.empty .tooltip { 
+            opacity: 1; 
+        }
         .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px 0; justify-content: center; align-items: flex-end; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0 8px 0; padding: 0 15px; }
         .btn { padding: 10px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; color: white; display: inline-flex; align-items: center; gap: 8px; }
@@ -65,6 +101,52 @@
         .toast.info { background: #00695c; }
         .toast.warning { background: #e65100; }
         #multiInput { display: none; }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu {
+            position: fixed;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            padding: 6px 0;
+            min-width: 200px;
+            z-index: 9999;
+            display: none;
+            border: 1px solid #e0e0e0;
+        }
+        .context-menu.show {
+            display: block;
+        }
+        .context-menu-item {
+            padding: 8px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #333;
+            transition: background 0.2s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .context-menu-item:hover {
+            background: #f0f0f0;
+        }
+        .context-menu-item .icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+        .context-menu-item .shortcut {
+            margin-left: auto;
+            color: #999;
+            font-size: 11px;
+        }
+        .context-menu-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 8px;
+        }
+
         @media (max-width: 600px) {
             body { padding: 5px; }
             .container { padding: 10px; border-radius: 8px; }
@@ -72,14 +154,19 @@
             .btn-group { flex-direction: column; }
             .btn { width: 100%; justify-content: center; padding: 12px 20px; }
             .click-overlay .tooltip { font-size: 10px; padding: 4px 12px; }
-            .click-overlay .paste-hint { font-size: 8px; padding: 2px 8px; }
+            .context-menu { min-width: 160px; }
+            .context-menu-item { font-size: 12px; padding: 6px 16px; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><img src="icons/favicon-32x32.png" alt="CanvasPRO" style="height:30px; width:30px; vertical-align:middle; margin-right:8px;">Canvas<span>PRO</span> <span style="font-size:clamp(12px,1.5vw,18px);color:#999;">1.1</span></h1>
+    <!-- JUDUL TIDAK GANDA - HANYA SATU CanvasPRO 1.1 -->
+    <div class="header-title">
+        <img src="icons/favicon-32x32.png" alt="CanvasPRO" class="logo" />
+        <span class="title-text">CanvasPRO <span class="version">1.1</span></span>
+    </div>
 
     <div class="canvas-wrapper" id="canvasWrapper">
         <canvas id="mainCanvas" width="2400" height="1350"></canvas>
@@ -96,6 +183,25 @@
 
     <div class="version">CanvasPRO 1.1 • © 2026</div>
     <div class="developer">Developer: <span>MangSatria</span></div>
+</div>
+
+<!-- ===== CONTEXT MENU ===== -->
+<div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" id="menuPaste">
+        <span class="icon">📋</span>
+        <span>Tempel</span>
+        <span class="shortcut">Ctrl+V</span>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" id="menuReset">
+        <span class="icon">🔄</span>
+        <span>Reset Gambar</span>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" id="menuDownload">
+        <span class="icon">⬇️</span>
+        <span>Download</span>
+    </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -140,7 +246,7 @@
         let imgLeft = null;
         let imgRight = null;
         let isRendering = false;
-        let pasteTarget = 'left';
+        let contextTarget = 'left';
 
         const multiInput = document.getElementById('multiInput');
         const downloadBtn = document.getElementById('downloadBtn');
@@ -148,6 +254,12 @@
         const installBtn = document.getElementById('installBtn');
         const updateBtn = document.getElementById('updateBtn');
         const toast = document.getElementById('toast');
+
+        // Context Menu Elements
+        const contextMenu = document.getElementById('contextMenu');
+        const menuPaste = document.getElementById('menuPaste');
+        const menuReset = document.getElementById('menuReset');
+        const menuDownload = document.getElementById('menuDownload');
 
         let overlayLeft = null;
         let overlayRight = null;
@@ -169,15 +281,99 @@
         }
 
         // ============================================
-        //  PASTE HANDLER - DIPERBAIKI
+        //  CONTEXT MENU - KLIK KANAN
         // ============================================
-        function handlePaste(e) {
-            // Cek apakah ada gambar di clipboard
+        function showContextMenu(e, target) {
+            e.preventDefault();
+            e.stopPropagation();
+            contextTarget = target;
+            
+            contextMenu.style.left = e.clientX + 'px';
+            contextMenu.style.top = e.clientY + 'px';
+            contextMenu.classList.add('show');
+            
+            console.log('📋 Context menu untuk:', target);
+        }
+
+        function hideContextMenu() {
+            contextMenu.classList.remove('show');
+        }
+
+        // ============================================
+        //  PASTE HANDLER
+        // ============================================
+        function handlePasteFromClipboard() {
+            console.log('📋 Mencoba paste ke:', contextTarget);
+            
+            if (navigator.clipboard && navigator.clipboard.read) {
+                navigator.clipboard.read()
+                    .then(items => {
+                        let imageFound = false;
+                        for (let item of items) {
+                            const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
+                            for (let type of imageTypes) {
+                                if (item.types.includes(type)) {
+                                    item.getType(type).then(blob => {
+                                        const file = new File([blob], 'pasted-image.png', { type: blob.type });
+                                        loadPastedImage(file);
+                                        imageFound = true;
+                                    }).catch(err => {
+                                        console.log('Gagal get type:', err);
+                                    });
+                                    break;
+                                }
+                            }
+                            if (imageFound) break;
+                        }
+                        if (!imageFound) {
+                            showToast('⚠️ Tidak ada gambar di clipboard', 'warning');
+                        }
+                    })
+                    .catch(err => {
+                        console.log('Gagal baca clipboard:', err);
+                        showToast('⚠️ Gagal akses clipboard. Coba Ctrl+V', 'warning');
+                    });
+            } else {
+                showToast('⚠️ Browser tidak support clipboard API. Coba Ctrl+V', 'warning');
+            }
+        }
+
+        async function loadPastedImage(file) {
+            try {
+                console.log('📷 Memuat gambar untuk area:', contextTarget);
+                const img = await loadImageFromFile(file);
+                const target = contextTarget || 'left';
+                
+                if (target === 'left') {
+                    imgLeft = img;
+                    showToast('✅ Gambar di-paste ke area KIRI!', 'success');
+                    console.log('✅ Gambar KIRI berhasil di-paste');
+                } else {
+                    imgRight = img;
+                    showToast('✅ Gambar di-paste ke area KANAN!', 'success');
+                    console.log('✅ Gambar KANAN berhasil di-paste');
+                }
+                renderCanvas();
+                hideContextMenu();
+            } catch (err) {
+                console.error('❌ Error paste:', err);
+                showToast('❌ Gagal paste gambar: ' + err, 'error');
+            }
+        }
+
+        // ============================================
+        //  EVENT PASTE CTRL+V
+        // ============================================
+        document.addEventListener('paste', function(e) {
+            const target = e.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+                return;
+            }
+            
             const items = e.clipboardData && e.clipboardData.items;
-            if (!items) return false;
+            if (!items) return;
 
             let imageFile = null;
-            
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 if (item.type.startsWith('image/')) {
@@ -188,48 +384,9 @@
 
             if (imageFile) {
                 e.preventDefault();
+                console.log('📷 Ctrl+V: Gambar terdeteksi, target:', contextTarget);
                 loadPastedImage(imageFile);
-                return true;
             }
-            return false;
-        }
-
-        async function loadPastedImage(file) {
-            try {
-                const img = await loadImageFromFile(file);
-                const target = pasteTarget || 'left';
-                
-                if (target === 'left') {
-                    imgLeft = img;
-                    showToast('✅ Gambar di-paste ke area KIRI!', 'success');
-                } else {
-                    imgRight = img;
-                    showToast('✅ Gambar di-paste ke area KANAN!', 'success');
-                }
-                renderCanvas();
-            } catch (err) {
-                showToast('❌ Gagal paste gambar: ' + err, 'error');
-            }
-        }
-
-        // ============================================
-        //  EVENT PASTE - DIPERBAIKI
-        // ============================================
-        // Event paste di document
-        document.addEventListener('paste', function(e) {
-            // Cek apakah target adalah input atau textarea
-            const target = e.target;
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-                return; // Biarkan paste biasa
-            }
-            
-            handlePaste(e);
-        });
-
-        // Event paste di canvas wrapper
-        canvasWrapper.addEventListener('paste', function(e) {
-            e.stopPropagation();
-            handlePaste(e);
         });
 
         // ============================================
@@ -249,7 +406,7 @@
             const leftH_px = imgHeight / scaleY;
             const rightX_px = imgX2 / scaleX;
 
-            // Overlay KIRI
+            // ========== OVERLAY KIRI ==========
             overlayLeft = document.createElement('div');
             overlayLeft.className = 'click-overlay';
             overlayLeft.style.left = leftX_px + 'px';
@@ -260,27 +417,30 @@
 
             const t1 = document.createElement('span');
             t1.className = 'tooltip';
-            t1.textContent = '📷 Klik atau Ctrl+V';
+            t1.textContent = '📷 Klik atau Klik Kanan';
             overlayLeft.appendChild(t1);
 
-            const hint1 = document.createElement('span');
-            hint1.className = 'paste-hint';
-            hint1.textContent = '⌨️ Ctrl+V untuk paste';
-            overlayLeft.appendChild(hint1);
-
-            overlayLeft.addEventListener('click', () => {
-                pasteTarget = 'left';
+            overlayLeft.addEventListener('click', (e) => {
+                e.stopPropagation();
+                contextTarget = 'left';
                 multiInput.dataset.target = 'left';
                 multiInput.click();
+                console.log('🖱️ Click kiri - target: left');
+            });
+
+            overlayLeft.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showContextMenu(e, 'left');
             });
 
             overlayLeft.addEventListener('mouseenter', () => {
-                pasteTarget = 'left';
+                contextTarget = 'left';
             });
 
             canvasWrapper.appendChild(overlayLeft);
 
-            // Overlay KANAN
+            // ========== OVERLAY KANAN ==========
             overlayRight = document.createElement('div');
             overlayRight.className = 'click-overlay';
             overlayRight.style.left = rightX_px + 'px';
@@ -291,22 +451,25 @@
 
             const t2 = document.createElement('span');
             t2.className = 'tooltip';
-            t2.textContent = '📷 Klik atau Ctrl+V';
+            t2.textContent = '📷 Klik atau Klik Kanan';
             overlayRight.appendChild(t2);
 
-            const hint2 = document.createElement('span');
-            hint2.className = 'paste-hint';
-            hint2.textContent = '⌨️ Ctrl+V untuk paste';
-            overlayRight.appendChild(hint2);
-
-            overlayRight.addEventListener('click', () => {
-                pasteTarget = 'right';
+            overlayRight.addEventListener('click', (e) => {
+                e.stopPropagation();
+                contextTarget = 'right';
                 multiInput.dataset.target = 'right';
                 multiInput.click();
+                console.log('🖱️ Click kanan - target: right');
+            });
+
+            overlayRight.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showContextMenu(e, 'right');
             });
 
             overlayRight.addEventListener('mouseenter', () => {
-                pasteTarget = 'right';
+                contextTarget = 'right';
             });
 
             canvasWrapper.appendChild(overlayRight);
@@ -348,6 +511,38 @@
                 overlayRight.classList.remove('empty');
             }
         }
+
+        // ============================================
+        //  CONTEXT MENU ITEMS
+        // ============================================
+        menuPaste.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('📋 Menu Paste diklik, target:', contextTarget);
+            handlePasteFromClipboard();
+        });
+
+        menuReset.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('🔄 Menu Reset diklik, target:', contextTarget);
+            if (contextTarget === 'left') {
+                imgLeft = null;
+                showToast('🔄 Gambar kiri direset', 'info');
+            } else {
+                imgRight = null;
+                showToast('🔄 Gambar kanan direset', 'info');
+            }
+            renderCanvas();
+            hideContextMenu();
+        });
+
+        menuDownload.addEventListener('click', (e) => {
+            e.stopPropagation();
+            downloadPNG();
+            hideContextMenu();
+        });
+
+        document.addEventListener('click', hideContextMenu);
+        document.addEventListener('scroll', hideContextMenu);
 
         // ============================================
         //  LOAD HEADER
@@ -742,7 +937,8 @@
             showToast('🖨️ CanvasPRO 1.1 - HYBRID MULTI siap!', 'success');
             console.log('✅ CanvasPRO 1.1 - HYBRID MULTI siap!');
             console.log('📱 Status install:', isAppInstalled() ? 'Sudah terinstall ✅' : 'Belum terinstall ❌');
-            console.log('📋 Fitur Paste: Ctrl+V di area canvas (arahkan mouse ke area target)');
+            console.log('🖱️ Klik kanan di area kiri atau kanan untuk menu context');
+            console.log('📋 Paste: Klik kanan → Tempel atau Ctrl+V');
         }
 
         init();
