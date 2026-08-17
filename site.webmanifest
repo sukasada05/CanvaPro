@@ -1,7 +1,7 @@
 {
-  "name": "CanvasPRO 1.1",
+  "name": "CanvasPRO 2.1",
   "short_name": "CanvasPRO",
-  "description": "Aplikasi Cetak Profesional",
+  "description": "Aplikasi CanvasPro",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
