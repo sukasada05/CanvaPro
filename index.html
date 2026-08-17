@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
     
-    <title>CanvasPRO 1.1 - Cetak Profesional</title>
+    <title>CanvasPRO 2.1 - Cetak Profesional</title>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -33,12 +33,17 @@
             vertical-align: middle;
         }
         .header-title .title-text {
-            color: #CC0000;
             font-size: clamp(20px, 3vw, 28px);
             font-weight: 700;
         }
-        .header-title .title-text .version {
-            color: #999;
+        .header-title .title-text .canvas-red {
+            color: #CC0000;
+        }
+        .header-title .title-text .pro-blue {
+            color: #1565C0;
+        }
+        .header-title .title-text .version-dark {
+            color: #1a1a1a;
             font-size: clamp(12px, 1.5vw, 18px);
             font-weight: 400;
         }
@@ -162,10 +167,12 @@
 <body>
 
 <div class="container">
-    <!-- JUDUL TIDAK GANDA - HANYA SATU CanvasPRO 1.1 -->
+    <!-- JUDUL DENGAN WARNA: Canvas MERAH, Pro BIRU, 2.1 HITAM GELAP -->
     <div class="header-title">
         <img src="icons/favicon-32x32.png" alt="CanvasPRO" class="logo" />
-        <span class="title-text">CanvasPRO <span class="version">1.1</span></span>
+        <span class="title-text">
+            <span class="canvas-red">Canvas</span><span class="pro-blue">Pro</span> <span class="version-dark">2.1</span>
+        </span>
     </div>
 
     <div class="canvas-wrapper" id="canvasWrapper">
@@ -180,9 +187,9 @@
         <button class="btn btn-install" id="installBtn">📲 Install Aplikasi</button>
         <button class="btn btn-update hidden" id="updateBtn">🔄 Update Aplikasi</button>
     </div>
-
-    <div class="version">CanvasPRO 1.1 • © 2026</div>
-    <div class="developer">Developer: <span>MangSatria</span></div>
+	
+    <div class="developer">Developer: <span>Kodim 1609/Buleleng</span>Koramil 05/Sukasada</div>
+    <div class="version">CanvasPRO 2.1 • © 2026</div>
 </div>
 
 <!-- ===== CONTEXT MENU ===== -->
@@ -934,8 +941,8 @@
                 hideInstallButton();
             }
             
-            showToast('🖨️ CanvasPRO 1.1 - HYBRID MULTI siap!', 'success');
-            console.log('✅ CanvasPRO 1.1 - HYBRID MULTI siap!');
+            showToast('🖨️ CanvasPRO 2.1 - HYBRID MULTI siap!', 'success');
+            console.log('✅ CanvasPRO 2.1 - HYBRID MULTI siap!');
             console.log('📱 Status install:', isAppInstalled() ? 'Sudah terinstall ✅' : 'Belum terinstall ❌');
             console.log('🖱️ Klik kanan di area kiri atau kanan untuk menu context');
             console.log('📋 Paste: Klik kanan → Tempel atau Ctrl+V');
