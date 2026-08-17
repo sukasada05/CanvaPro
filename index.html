@@ -772,10 +772,10 @@
                 
                 const filename = `lapsit_${downloadCounter}.png`;
                 showToast(`✅ Download ${filename} selesai! (75% ukuran)`, 'success');
-                alert(`✅ File ${filename} berhasil didownload!\n\nFormat: PNG (Lossless)\nUkuran: 75% dari asli (${newWidth}x${newHeight})\nKualitas gambar tetap bagus.\n\nFile tersimpan di folder Downloads.`);
+                // ALERT SUDAH DIHAPUS
             } catch (e) {
                 showToast('❌ Gagal download: ' + e.message, 'error');
-                alert('❌ Gagal download: ' + e.message);
+                // ALERT ERROR SUDAH DIHAPUS
             }
         }
 
