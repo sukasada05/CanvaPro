@@ -736,29 +736,43 @@
         }
 
         // ============================================
-        //  DOWNLOAD PNG DENGAN KOMPRESI RINGAN
+        //  DOWNLOAD PNG DENGAN KUALITAS 75%
         // ============================================
         function downloadPNG() {
             try {
                 let downloadCounter = parseInt(localStorage.getItem('lapsitDownloadCounter') || '0') + 1;
                 localStorage.setItem('lapsitDownloadCounter', downloadCounter.toString());
                 
-                // === TETAP PNG DENGAN KUALITAS TETAP BAGUS ===
-                // Gunakan PNG dengan kompresi default (lossless)
-                // Ukuran file lebih kecil dari PNG tanpa kompresi
+                // === PNG DENGAN RESIZE 75% ===
+                // Buat canvas temporary dengan ukuran 75% dari aslinya
+                // Ini akan menghasilkan file PNG yang lebih kecil
+                const scaleFactor = 0.75;
+                const newWidth = Math.floor(W * scaleFactor);
+                const newHeight = Math.floor(H * scaleFactor);
+                
+                // Buat canvas temporary
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = newWidth;
+                tempCanvas.height = newHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Gambar ulang dengan ukuran lebih kecil
+                tempCtx.imageSmoothingEnabled = true;
+                tempCtx.imageSmoothingQuality = 'high';
+                tempCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
+                
+                // Download sebagai PNG
                 const link = document.createElement('a');
                 link.download = `lapsit_${downloadCounter}.png`;
-                
-                // PNG dengan kompresi default - kualitas tetap bagus, ukuran lebih kecil
-                link.href = canvas.toDataURL('image/png');
+                link.href = tempCanvas.toDataURL('image/png');
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 
                 const filename = `lapsit_${downloadCounter}.png`;
-                showToast(`✅ Download ${filename} selesai! (PNG lossless)`, 'success');
-                alert(`✅ File ${filename} berhasil didownload!\n\nFormat: PNG (Lossless - kualitas tetap bagus)\nUkuran file lebih kecil dengan kompresi default.\n\nFile tersimpan di folder Downloads.`);
+                showToast(`✅ Download ${filename} selesai! (75% ukuran)`, 'success');
+                alert(`✅ File ${filename} berhasil didownload!\n\nFormat: PNG (Lossless)\nUkuran: 75% dari asli (${newWidth}x${newHeight})\nKualitas gambar tetap bagus.\n\nFile tersimpan di folder Downloads.`);
             } catch (e) {
                 showToast('❌ Gagal download: ' + e.message, 'error');
                 alert('❌ Gagal download: ' + e.message);
@@ -954,7 +968,7 @@
             console.log('📱 Status install:', isAppInstalled() ? 'Sudah terinstall ✅' : 'Belum terinstall ❌');
             console.log('🖱️ Klik kanan di area kiri atau kanan untuk menu context');
             console.log('📋 Paste: Klik kanan → Tempel atau Ctrl+V');
-            console.log('📸 Download: Format PNG lossless (kualitas tetap bagus)');
+            console.log('📸 Download: Format PNG dengan ukuran 75% (kualitas tetap bagus)');
         }
 
         init();
