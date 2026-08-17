@@ -1,4 +1,4 @@
-# CanvasPRO 1.1
+# CanvasPRO 2.1
 
 **Aplikasi Template Cetak Profesional**
 
