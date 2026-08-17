@@ -187,9 +187,9 @@
         <button class="btn btn-install" id="installBtn">📲 Install Aplikasi</button>
         <button class="btn btn-update hidden" id="updateBtn">🔄 Update Aplikasi</button>
     </div>
-	
-    <div class="developer">Developer: <span>Kodim 1609/Buleleng</span>Koramil 05/Sukasada</div>
+
     <div class="version">CanvasPRO 2.1 • © 2026</div>
+    <div class="developer">Developer: <span>MangSatria</span></div>
 </div>
 
 <!-- ===== CONTEXT MENU ===== -->
@@ -735,22 +735,29 @@
             setTimeout(updateOverlays, 50);
         }
 
+        // ============================================
+        //  DOWNLOAD DENGAN KUALITAS TURUN (JPEG 85%)
+        // ============================================
         function downloadPNG() {
             try {
                 let downloadCounter = parseInt(localStorage.getItem('lapsitDownloadCounter') || '0') + 1;
                 localStorage.setItem('lapsitDownloadCounter', downloadCounter.toString());
                 
+                // === KUALITAS DITURUNKAN DENGAN JPEG 85% ===
+                // Canvas tetap tampil PNG, tapi download pakai JPEG dengan kualitas 85%
                 const link = document.createElement('a');
-                link.download = `lapsit_${downloadCounter}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.download = `lapsit_${downloadCounter}.jpg`; // Ganti ekstensi ke .jpg
+                
+                // Konversi ke JPEG dengan kualitas 85% (lebih kecil, kualitas turun sedikit)
+                link.href = canvas.toDataURL('image/jpeg', 0.85);
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 
-                const filename = `lapsit_${downloadCounter}.png`;
-                showToast(`✅ Download ${filename} selesai!`, 'success');
-                alert(`✅ File ${filename} berhasil didownload!\n\nFile tersimpan di folder Downloads.\n\nSilakan cek folder Downloads Anda.`);
+                const filename = `lapsit_${downloadCounter}.jpg`;
+                showToast(`✅ Download ${filename} selesai! (Kualitas 85%)`, 'success');
+                alert(`✅ File ${filename} berhasil didownload!\n\nFormat: JPEG (Kualitas 85%)\nUkuran file lebih kecil dari PNG.\n\nFile tersimpan di folder Downloads.`);
             } catch (e) {
                 showToast('❌ Gagal download: ' + e.message, 'error');
                 alert('❌ Gagal download: ' + e.message);
@@ -946,6 +953,7 @@
             console.log('📱 Status install:', isAppInstalled() ? 'Sudah terinstall ✅' : 'Belum terinstall ❌');
             console.log('🖱️ Klik kanan di area kiri atau kanan untuk menu context');
             console.log('📋 Paste: Klik kanan → Tempel atau Ctrl+V');
+            console.log('📸 Download: Format JPEG dengan kualitas 85% (ukuran lebih kecil)');
         }
 
         init();
