@@ -59,6 +59,32 @@
         .btn-update.hidden { display: none !important; }
         #multiInput { display: none; }
 
+        .download-toast {
+            position: fixed;
+            left: 50%;
+            top: 22px;
+            transform: translate(-50%, -20px);
+            background: rgba(17, 94, 46, 0.96);
+            color: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 14px 30px rgba(0,0,0,0.25);
+            padding: 14px 20px;
+            min-width: min(90vw, 290px);
+            max-width: 420px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 1000;
+        }
+        .download-toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
         @media (max-width: 600px) {
             body { padding: 5px; }
             .container { padding: 10px; border-radius: 8px; }
@@ -85,6 +111,8 @@
     </div>
     
 </div>
+
+<div id="downloadToast" class="download-toast" aria-live="polite">Download berhasil!</div>
 
 <script>
     (function() {
@@ -454,6 +482,17 @@
         // ============================================
         //  DOWNLOAD PNG SESUAI TAMPILAN KANVAS
         // ============================================
+        const downloadToast = document.getElementById('downloadToast');
+
+        function showDownloadToast() {
+            if (!downloadToast) return;
+            downloadToast.classList.add('show');
+            clearTimeout(downloadToast.hideTimer);
+            downloadToast.hideTimer = setTimeout(() => {
+                downloadToast.classList.remove('show');
+            }, 2200);
+        }
+
         function downloadPNG() {
             try {
                 let downloadCounter = parseInt(localStorage.getItem('lapsitDownloadCounter') || '0') + 1;
@@ -481,6 +520,7 @@
                 document.body.removeChild(link);
                 
                 const filename = `lapsit_${downloadCounter}.png`;
+                showDownloadToast();
             } catch (e) {
                 console.error('❌ Gagal download:', e);
             }
