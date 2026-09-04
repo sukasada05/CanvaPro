@@ -49,17 +49,13 @@
         }
         .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px 0; justify-content: center; align-items: flex-end; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0 8px 0; padding: 0 15px; }
-        .btn { padding: 10px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; color: white; display: inline-flex; align-items: center; gap: 8px; }
-        .btn:active { transform: scale(0.95); }
-        .btn-download { background: linear-gradient(135deg, #1565C0 0%, #0D47A1 100%); box-shadow: 0 4px 15px rgba(21,101,192,0.3); }
-        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(21,101,192,0.5); }
-        .btn-reset { background: #757575; padding: 10px 20px; }
-        .btn-reset:hover { background: #616161; transform: translateY(-2px); }
-        .btn-install { background: linear-gradient(135deg, #CC0000 0%, #25D366 100%); padding: 10px 24px; }
-        .btn-install:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(204,0,0,0.5); }
+        .btn { padding: 10px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; color: #ffffff; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.1s ease, color 0.1s ease; }
+        .btn:active { transform: scale(0.97); color: #b8860b; }
+        .btn-download { background: #176b32; }
+        .btn-reset { background: #176b32; padding: 10px 20px; }
+        .btn-install { background: #176b32; padding: 10px 24px; }
         .btn-install.hidden { display: none !important; }
-        .btn-update { background: linear-gradient(135deg, #FFA000 0%, #FF6F00 100%); padding: 10px 24px; }
-        .btn-update:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,160,0,0.5); }
+        .btn-update { background: #176b32; padding: 10px 24px; }
         .btn-update.hidden { display: none !important; }
         #multiInput { display: none; }
 
@@ -82,7 +78,7 @@
     <input type="file" id="multiInput" accept="image/*" multiple />
 
     <div class="btn-group" id="btnGroup">
-        <button class="btn btn-download" id="downloadBtn">⬇️ Download PNG</button>
+        <button class="btn btn-download" id="downloadBtn"><span aria-hidden="true">⬇</span> DOWNLOAD</button>
         <button class="btn btn-reset" id="resetBtn">🔄 Reset</button>
         <button class="btn btn-install" id="installBtn">📲 Install Aplikasi</button>
         <button class="btn btn-update hidden" id="updateBtn">🔄 Update Aplikasi</button>
@@ -219,6 +215,7 @@
 
             overlayLeft.addEventListener('click', (e) => {
                 e.stopPropagation();
+                leftLabel.style.display = 'none';
                 contextTarget = 'left';
                 multiInput.dataset.target = 'left';
                 multiInput.click();
@@ -247,6 +244,7 @@
 
             overlayRight.addEventListener('click', (e) => {
                 e.stopPropagation();
+                rightLabel.style.display = 'none';
                 contextTarget = 'right';
                 multiInput.dataset.target = 'right';
                 multiInput.click();
