@@ -52,7 +52,6 @@
         .btn { padding: 10px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; color: #ffffff; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.1s ease, color 0.1s ease; }
         .btn:active { transform: scale(0.97); color: #b8860b; }
         .btn-download { background: #176b32; }
-        .btn-reset { background: #176b32; padding: 10px 20px; }
         .btn-install { background: #176b32; padding: 10px 24px; }
         .btn-install.hidden { display: none !important; }
         .btn-update { background: #176b32; padding: 10px 24px; }
@@ -105,7 +104,6 @@
 
     <div class="btn-group" id="btnGroup">
         <button class="btn btn-download" id="downloadBtn"><span aria-hidden="true">⬇</span> DOWNLOAD</button>
-        <button class="btn btn-reset" id="resetBtn">🔄 Reset</button>
         <button class="btn btn-install" id="installBtn">📲 Install Aplikasi</button>
         <button class="btn btn-update hidden" id="updateBtn">🔄 Update Aplikasi</button>
     </div>
@@ -156,7 +154,6 @@
 
         const multiInput = document.getElementById('multiInput');
         const downloadBtn = document.getElementById('downloadBtn');
-        const resetBtn = document.getElementById('resetBtn');
         const installBtn = document.getElementById('installBtn');
         const updateBtn = document.getElementById('updateBtn');
         let overlayLeft = null;
@@ -484,8 +481,9 @@
         // ============================================
         const downloadToast = document.getElementById('downloadToast');
 
-        function showDownloadToast() {
+        function showDownloadToast(message) {
             if (!downloadToast) return;
+            downloadToast.textContent = message;
             downloadToast.classList.add('show');
             clearTimeout(downloadToast.hideTimer);
             downloadToast.hideTimer = setTimeout(() => {
@@ -494,10 +492,12 @@
         }
 
         function downloadPNG() {
+            if (!imgLeft && !imgRight) {
+                showDownloadToast('Tambahkan gambar sebelum download.');
+                return;
+            }
+
             try {
-                let downloadCounter = parseInt(localStorage.getItem('lapsitDownloadCounter') || '0') + 1;
-                localStorage.setItem('lapsitDownloadCounter', downloadCounter.toString());
-                
                 const scaleFactor = 1;
                 const newWidth = Math.floor(canvas.width * scaleFactor);
                 const newHeight = Math.floor(canvas.height * scaleFactor);
@@ -506,27 +506,35 @@
                 tempCanvas.width = newWidth;
                 tempCanvas.height = newHeight;
                 const tempCtx = tempCanvas.getContext('2d');
+                if (!tempCtx) {
+                    throw new Error('Tidak dapat menyiapkan gambar untuk download.');
+                }
                 
                 tempCtx.imageSmoothingEnabled = true;
                 tempCtx.imageSmoothingQuality = 'high';
                 tempCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
+
+                const imageData = tempCanvas.toDataURL('image/png');
+                const downloadCounter = parseInt(localStorage.getItem('lapsitDownloadCounter') || '0', 10) + 1;
                 
                 const link = document.createElement('a');
                 link.download = `lapsit_${downloadCounter}.png`;
-                link.href = tempCanvas.toDataURL('image/png');
+                link.href = imageData;
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                
-                const filename = `lapsit_${downloadCounter}.png`;
-                showDownloadToast();
+
+                localStorage.setItem('lapsitDownloadCounter', downloadCounter.toString());
+                clearImages();
+                showDownloadToast('Download berhasil! Gambar sudah direset.');
             } catch (e) {
                 console.error('❌ Gagal download:', e);
+                showDownloadToast('Download gagal. Silakan coba lagi.');
             }
         }
 
-        function resetAll() {
+        function clearImages() {
             imgLeft = null;
             imgRight = null;
             multiInput.value = '';
@@ -572,9 +580,7 @@
             multiInput.value = '';
             multiInput.dataset.target = 'left';
         });
-
         downloadBtn.addEventListener('click', downloadPNG);
-        resetBtn.addEventListener('click', resetAll);
 
         // ============================================
         //  PWA INSTALL LOGIC
